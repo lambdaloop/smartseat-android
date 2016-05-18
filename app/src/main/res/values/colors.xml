@@ -7,6 +7,8 @@
     <!--<color name="tabPrimary">#ffffff</color>-->
     <!--<color name="tabSecondary">#bbbbbb</color>-->
     <!--<color name="tabAccent">#ffffff</color>-->
+    <color name="backgroundColor">#eeeeee</color>
+
 
     <color name="tabPrimary">#000000</color>
     <color name="tabSecondary">#999999</color>

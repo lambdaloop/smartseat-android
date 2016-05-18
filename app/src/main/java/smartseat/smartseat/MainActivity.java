@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
         public void onServiceDisconnected(ComponentName name) {
             rfduinoService = null;
             Log.i(TAG, "DISCONNECTED");
+            bluetoothAdapter.startLeScan(
+                    new UUID[]{RFduinoService.UUID_SERVICE},
+                    MainActivity.this);
 //            downgradeState(STATE_DISCONNECTED);
         }
     };
@@ -217,8 +220,9 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
 
     @Override
     public void onLeScan(BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-        Log.i(TAG, String.format("FOUND DEVICE: %s", device.getName().toLowerCase()));
-        if(device.getName().toLowerCase().equals("rfduino")) {
+        Log.i(TAG, String.format("FOUND DEVICE: %s", device.getName()));
+
+        if(device.getName().equals("SmartAss V1")) {
             bluetoothAdapter.stopLeScan(this);
             bluetoothDevice = device;
             connectDevice();

@@ -42,7 +42,7 @@ public class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback 
         sensorValues = new double[MainActivity.NUM_SENSORS];
         gridNum = (int) Math.ceil(Math.sqrt(MainActivity.NUM_SENSORS)-0.001);
         Log.i(TAG, String.format("gridNum: %d", gridNum));
-        minGap = 25;
+        minGap = 90;
     }
 
     @Override
@@ -57,8 +57,8 @@ public class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback 
         int gapY = (height - rectHeight*gridNum)/(gridNum+1);
 
         // fill with white
-        paint.setARGB(255, 255, 255, 255);
-        canvas.drawPaint(paint);
+//        paint.setARGB(255, 250, 250, 250);
+//        canvas.drawPaint(paint);
 
 
 
@@ -147,6 +147,12 @@ class PanelThread extends Thread {
                 if (c != null) {
                     _surfaceHolder.unlockCanvasAndPost(c);
                 }
+            }
+
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
