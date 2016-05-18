@@ -1,6 +1,9 @@
 package smartseat.smartseat;
 
 import android.app.ActionBar;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -10,13 +13,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.os.IBinder;
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -85,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
         }
     };
     private TabsPagerAdapter tabsAdapter;
+    private double[] sensorValues = new double[NUM_SENSORS];
 
 
     @Override
@@ -209,14 +217,66 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
 //        Log.i(TAG, String.format("TABS receive: %s", String.valueOf(tabsAdapter)));
 //        Log.i(TAG, String.format("%d %.3f", sensorNum, 1-sensorValue/1024.0));
 
-        tabsAdapter.updateSensor(sensorNum, 1-sensorValue/1024.0);
- 
+        double value = 1-sensorValue/1024.0;
+        tabsAdapter.updateSensor(sensorNum, value);
+
+        updateSensor(sensorNum, value);
+    }
+
+    private long lastFetch = 0;
+
+    private void updateSensor(int sensorNum, double v) {
+        sensorValues[sensorNum] = v;
+        long currentTime = System.currentTimeMillis();
+        if(currentTime - lastFetch > 100) {
+            updateVibration();
+        }
+    }
+
+    private boolean isVibrating = false;
+    private long lastStartVibration = 0;
+
+    private static double THRESHOLD = 0.7;
+    private static long VIBRATION_DELAY = 3000;
+    private static long VIBRATION_LENGTH = 1500;
+
+
+    private void updateVibration() {
+        boolean vibration = false;
+//        Log.i(TAG, Arrays.toString(sensorValues));
+        for(int i=0; i<NUM_SENSORS; i++) {
+            if(sensorValues[i] > THRESHOLD) {
+                vibration = true;
+                break;
+            }
+        }
+        if(!isVibrating && vibration) {
+            lastStartVibration = System.currentTimeMillis();
+            isVibrating = true;
+        } else if(!vibration && isVibrating) {
+            isVibrating = false;
+        }
+
+//        Log.i(TAG, String.format("vibrating: %b", isVibrating));
+
+        long currentTime = System.currentTimeMillis();
+
+        if(isVibrating && (currentTime - lastStartVibration) > VIBRATION_DELAY) {
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            v.vibrate(VIBRATION_LENGTH);
+            lastStartVibration = currentTime;
+
+            MediaPlayer mediaPlayer = MediaPlayer.create(this, Settings.System.DEFAULT_NOTIFICATION_URI);
+            mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        }
     }
 
     private void connectDevice() {
         Intent rfduinoIntent = new Intent(MainActivity.this, RFduinoService.class);
         bindService(rfduinoIntent, rfduinoServiceConnection, BIND_AUTO_CREATE);
     }
+
+
 
     @Override
     public void onLeScan(BluetoothDevice device, final int rssi, final byte[] scanRecord) {

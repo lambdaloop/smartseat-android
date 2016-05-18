@@ -24,7 +24,7 @@
             android:id="@+id/pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context="net.voidynullness.android.tabitytabs.TabLayoutActivity">
+            tools:context="net.voidynul lness.android.tabitytabs.TabLayoutActivity">
 
         </android.support.v4.view.ViewPager>
 
