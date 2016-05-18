@@ -8,6 +8,7 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical" android:padding="0dip"
+        android:id="@+id/mainContent"
         android:gravity="center_horizontal"
         android:layout_width="match_parent" android:layout_height="match_parent">
 
@@ -33,6 +34,28 @@
 
 
 
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical" android:padding="0dip"
+        android:id="@+id/preferences"
+        android:gravity="center_horizontal"
+        android:visibility="gone"
+        android:layout_width="match_parent" android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick a device"/>
+
+
+        <ListView
+            android:id="@+id/deviceList"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:background="#ffffffff"
+            android:choiceMode="singleChoice" />
+
+    </LinearLayout>
 
     <!-- The navigation drawer -->
     <RelativeLayout
@@ -41,14 +64,11 @@
         android:layout_height="match_parent"
         android:layout_gravity="start">
 
-        <!-- Profile Box -->
-
         <!-- List of Actions (pages) -->
         <ListView
             android:id="@+id/navList"
             android:layout_width="280dp"
             android:layout_height="match_parent"
-            android:layout_below="@+id/profileBox"
             android:background="#ffffffff"
             android:choiceMode="singleChoice" />
 
