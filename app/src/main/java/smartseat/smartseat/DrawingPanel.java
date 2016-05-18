@@ -101,6 +101,7 @@ public class DrawingPanel extends SurfaceView implements SurfaceHolder.Callback 
 
     // sensor value should be in [0,1]
     public void updateSensor(int sensor, double value) {
+        Log.i(TAG, String.format("%d %.3f", sensor, value));
         sensorValues[sensor] = value;
     }
 }

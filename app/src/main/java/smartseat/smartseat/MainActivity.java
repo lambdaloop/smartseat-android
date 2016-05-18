@@ -1,5 +1,6 @@
 package smartseat.smartseat;
 
+import android.app.ActionBar;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -10,14 +11,21 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 
@@ -30,7 +38,11 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
     private BluetoothDevice bluetoothDevice;
 
     private RFduinoService rfduinoService;
-    private DrawingPanel panel;
+//    private DrawingPanel panel;
+
+    private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerLayout mDrawerLayout;
+
 
     private final ServiceConnection rfduinoServiceConnection = new ServiceConnection() {
         @Override
@@ -69,16 +81,46 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
             }
         }
     };
+    private TabsPagerAdapter tabsAdapter;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        LinearLayout fv = (LinearLayout) findViewById(R.id.top_layout);
-        panel = new DrawingPanel(this);
-        fv.addView(panel);
+        TabLayout tabs = (TabLayout) findViewById(R.id.tabs);
+        ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        tabsAdapter = new TabsPagerAdapter(getSupportFragmentManager());
+
+        assert pager != null;
+        assert tabs != null;
+
+        pager.setAdapter(tabsAdapter);
+        tabs.setupWithViewPager(pager);
+
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        Log.i(TAG, String.format("DRAWER: %s", String.valueOf(mDrawerLayout)));
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+
+                invalidateOptionsMenu();
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                Log.d(TAG, "onDrawerClosed: " + getTitle());
+
+                invalidateOptionsMenu();
+            }
+        };
+
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         if (this.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
@@ -101,10 +143,37 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
 
 
 
-        Log.i(TAG, String.format("PANEL: %s", String.valueOf(panel)));
+//        Log.i(TAG, String.format("PANEL: %s", String.valueOf(panel)));
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Log.i(TAG, String.format("TABS onCreate: %s", String.valueOf(tabsAdapter)));
+
 
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.i(TAG, String.format("optionsSelected DRAWER: %s", String.valueOf(mDrawerLayout)));
+
+        // Pass the event to ActionBarDrawerToggle
+        // If it returns true, then it has handled
+        // the nav drawer indicator touch event
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
+        // Handle your other action bar items...
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        Log.i(TAG, String.format("PostCreate DRAWER: %s", String.valueOf(mDrawerLayout)));
+
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
 
     @Override
     protected void onStart() {
@@ -134,11 +203,11 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
         int sensorNum = Integer.parseInt(arr[0]);
         int sensorValue = Integer.parseInt(arr[1]);
 
-        if(panel != null) {
-            panel.updateSensor(sensorNum, sensorValue/1024.0);
-        }
+//        Log.i(TAG, String.format("TABS receive: %s", String.valueOf(tabsAdapter)));
+//        Log.i(TAG, String.format("%d %.3f", sensorNum, 1-sensorValue/1024.0));
 
-//        Log.i(TAG, String.format("data: %s", data));
+        tabsAdapter.updateSensor(sensorNum, 1-sensorValue/1024.0);
+ 
     }
 
     private void connectDevice() {
@@ -148,11 +217,12 @@ public class MainActivity extends AppCompatActivity implements BluetoothAdapter.
 
     @Override
     public void onLeScan(BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-        bluetoothAdapter.stopLeScan(this);
-        bluetoothDevice = device;
-        Log.i(TAG, String.format("FOUND DEVICE: %s", device.getName()));
-
-        connectDevice();
+        Log.i(TAG, String.format("FOUND DEVICE: %s", device.getName().toLowerCase()));
+        if(device.getName().toLowerCase().equals("rfduino")) {
+            bluetoothAdapter.stopLeScan(this);
+            bluetoothDevice = device;
+            connectDevice();
+        }
 
     }
 }
